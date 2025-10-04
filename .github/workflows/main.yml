@@ -1,337 +1,172 @@
-name: All Builds (Linux, macOS, Windows, Android, IPA, APK, AAB)
+name: Build All Platforms
 
 on:
-  # Runs on push to any of the below branches
   push:
-    branches:
-      - master
-      - main
-  # Runs on pull request events that target one of the below branches
+    branches: [ main, master ]
   pull_request:
-    branches:
-      - master
-      - main
-
-  # Allows you to run this workflow manually from the Actions tab of the repository
+    branches: [ main, master ]
   workflow_dispatch:
 
 env:
-  # https://flet.dev/docs/publish#versioning
   BUILD_NUMBER: 1
   BUILD_VERSION: 1.0.0
-  PYTHON_VERSION: 3.12.2
-  FLUTTER_VERSION: 3.22.2
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Python Dependencies
+        python-version: '3.11'
+        
+    - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        pip install flet
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
-        cache-key: flutter-${{ env.FLUTTER_VERSION }}
-
+        flutter-version: '3.22.2'
+        
     - name: Install Linux dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgtk-3-dev ninja-build libblkid-dev liblzma-dev
-
-    - name: Accept Android licenses
+        sudo apt-get install -y libgtk-3-dev
+        
+    - name: Build Linux
       run: |
-        flutter doctor --android-licenses --verbosity=debug
-
-    - name: Flet Build Linux
-      run: |
-        flutter config --no-analytics
-        flutter pub get
-        flet build linux --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
-
-    - name: Upload Linux Artifact
-      uses: actions/upload-artifact@v4.3.4
+        flet build linux -v --build-number $BUILD_NUMBER --build-version $BUILD_VERSION
+        
+    - uses: actions/upload-artifact@v4
       with:
-        name: linux-build-artifact
-        path: build/linux
-        if-no-files-found: warn
-        overwrite: false
-
-  build-macos:
-    runs-on: macos-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Python Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
-        cache-key: flutter-${{ env.FLUTTER_VERSION }}
-
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4.2.1
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-
-    - name: Accept Android licenses
-      run: |
-        flutter doctor --android-licenses --verbosity=debug
-
-    - name: Flet Build macOS
-      run: |
-        flutter config --no-analytics
-        flutter pub get
-        flet build macos --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
-
-    - name: Upload macOS Artifact
-      uses: actions/upload-artifact@v4.3.4
-      with:
-        name: macos-build-artifact
-        path: build/macos
-        if-no-files-found: warn
-        overwrite: false
+        name: linux-app
+        path: build/linux/
 
   build-windows:
     runs-on: windows-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Python Dependencies
+        python-version: '3.11'
+        
+    - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        pip install flet
+        if (Test-Path requirements.txt) { pip install -r requirements.txt }
+        
+    - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
-        cache-key: flutter-${{ env.FLUTTER_VERSION }}
-
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4.2.1
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-
-    - name: Accept Android licenses
+        flutter-version: '3.22.2'
+        
+    - name: Build Windows
       run: |
-        flutter doctor --android-licenses --verbosity=debug
-
-    - name: Flet Build Windows
-      run: |
-        flutter config --no-analytics
-        flutter pub get
-        flet build windows --verbose --no-rich-output --build-number=$env:BUILD_NUMBER --build-version=$env:BUILD_VERSION
-
-    - name: Upload Windows Artifact
-      uses: actions/upload-artifact@v4.3.4
+        flet build windows -v --build-number $env:BUILD_NUMBER --build-version $env:BUILD_VERSION
+        
+    - uses: actions/upload-artifact@v4
       with:
-        name: windows-build-artifact
-        path: build/windows
-        if-no-files-found: warn
-        overwrite: false
+        name: windows-app
+        path: build/windows/
 
-  build-aab:
+  build-macos:
     runs-on: macos-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Python Dependencies
+        python-version: '3.11'
+        
+    - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        pip install flet
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
-        cache-key: flutter-${{ env.FLUTTER_VERSION }}
-
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4.2.1
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-
-    - name: Install Android SDK and accept licenses
-      uses: android-actions/setup-android@v3
-      
-    - name: Accept Android licenses
+        flutter-version: '3.22.2'
+        
+    - name: Build macOS
       run: |
-        yes | sdkmanager --licenses || true
-        flutter doctor --android-licenses
-
-    - name: Flet Build AAB
-      run: |
-        flutter config --no-analytics
-        flutter pub get
-        flet build aab --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
-
-    - name: Upload AAB Artifact
-      uses: actions/upload-artifact@v4.3.4
+        flet build macos -v --build-number $BUILD_NUMBER --build-version $BUILD_VERSION
+        
+    - uses: actions/upload-artifact@v4
       with:
-        name: aab-build-artifact
-        path: build/aab
-        if-no-files-found: warn
-        overwrite: false
+        name: macos-app
+        path: build/macos/
 
-  build-apk:
+  build-android:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Python Dependencies
+        python-version: '3.11'
+        
+    - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        pip install flet
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
-        cache-key: flutter-${{ env.FLUTTER_VERSION }}
-
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4.2.1
+        flutter-version: '3.22.2'
+        
+    - name: Setup JDK
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
-
-    - name: Install Android SDK and accept licenses
+        java-version: '11'
+        
+    - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      
-    - name: Accept Android licenses
+        
+    - name: Build APK
       run: |
-        yes | sdkmanager --licenses || true
-        flutter doctor --android-licenses
-
-    - name: Install Linux dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libgtk-3-dev ninja-build
-
-    - name: Flutter doctor
-      run: flutter doctor -v
-
-    - name: Flet Build APK
-      run: |
-        flutter config --no-analytics
-        flutter pub get
-        flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4.3.4
+        flet build apk -v --build-number $BUILD_NUMBER --build-version $BUILD_VERSION
+        
+    - uses: actions/upload-artifact@v4
       with:
-        name: apk-build-artifact
-        path: build/apk
-        if-no-files-found: warn
-        overwrite: false
+        name: android-apk
+        path: build/apk/
 
-  build-ipa:
-    runs-on: macos-latest
-
+  build-web:
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Python Dependencies
+        python-version: '3.11'
+        
+    - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        pip install flet
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
-        cache-key: flutter-${{ env.FLUTTER_VERSION }}
-
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4.2.1
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-
-    - name: Install Android SDK and accept licenses
-      uses: android-actions/setup-android@v3
-      
-    - name: Accept Android licenses
+        flutter-version: '3.22.2'
+        
+    - name: Build Web
       run: |
-        yes | sdkmanager --licenses || true
-        flutter doctor --android-licenses
-
-    - name: Flet Build IPA
-      run: |
-        flutter config --no-analytics
-        flutter pub get
-        flet build ipa --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION 
-
-    - name: Upload IPA Artifact
-      uses: actions/upload-artifact@v4.3.4
+        flet build web -v
+        
+    - uses: actions/upload-artifact@v4
       with:
-        name: ipa-build-artifact
-        path: build/ipa
-        if-no-files-found: warn
-        overwrite: false
+        name: web-app
+        path: build/web/
