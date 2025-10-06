@@ -20,6 +20,7 @@ env:
   BUILD_NUMBER: 1
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.12.2
+  FLUTTER_VERSION: 3.35.5  # أحدث stable في أكتوبر 2025
 
 jobs:
   build-linux:
@@ -39,14 +40,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: stable
+
     - name: Patch for linux build
       run: |
         sudo apt-get update -y
         sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev mesa-utils
         export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+        flutter doctor
 
     - name: Flet Build Linux
       run: |
+        flutter config --no-analytics 
         flet build linux --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
 
     - name: Upload Linux Artifact
@@ -74,11 +83,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: stable
+
     - name: Accept Xcode license
       run: sudo xcodebuild -license accept
 
     - name: Flet Build macOS
       run: |
+        flutter config --no-analytics
         flet build macos --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
 
     - name: Upload macOS Artifact
@@ -106,11 +122,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: stable
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
     - name: Flet Build Windows
       run: |
+        flutter config --no-analytics
         flet build windows --verbose --no-rich-output --build-number=$env:BUILD_NUMBER --build-version=$env:BUILD_VERSION
 
     - name: Upload Windows Artifact
@@ -138,12 +161,21 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Accept Android licenses (if needed)
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: stable
+
+    - name: Accept Android licenses
       run: |
         yes | flutter doctor --android-licenses || true
+        flutter precache --android
+        flutter doctor  # Verify
 
     - name: Flet Build AAB
       run: |
+        flutter config --no-analytics
         flet build aab --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
 
     - name: Upload AAB Artifact
@@ -171,13 +203,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: stable
+
     - name: Setup Java JDK
       uses: actions/setup-java@v4.2.1
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Linux dependencies (for GTK and others)
+    - name: Install Linux dependencies
       run: |
         sudo apt-get update -y
         sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev mesa-utils
@@ -186,13 +224,15 @@ jobs:
     - name: Accept Android licenses
       run: |
         export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+        flutter precache --android
         yes | flutter doctor --android-licenses || true
-        flutter precache --android || true
+        flutter doctor  # Verify all ✓
 
     - name: Flet Build APK
       env:
         PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
       run: |
+        flutter config --no-analytics
         flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
 
     - name: Upload APK Artifact
@@ -220,6 +260,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: stable
+
     - name: Accept Xcode license
       run: sudo xcodebuild -license accept
 
@@ -228,6 +274,7 @@ jobs:
 
     - name: Flet Build IPA
       run: |
+        flutter config --no-analytics
         flet build ipa --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION 
 
     - name: Upload IPA Artifact
