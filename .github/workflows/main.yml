@@ -55,6 +55,7 @@ jobs:
 
     - name: Flet Build Linux
       run: |
+        export PATH="$FLUTTER_ROOT/bin:$PATH"
         flutter config --no-analytics 
         flet build linux --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
 
@@ -94,6 +95,7 @@ jobs:
 
     - name: Flet Build macOS
       run: |
+        export PATH="$FLUTTER_ROOT/bin:$PATH"
         flutter config --no-analytics
         flet build macos --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
 
@@ -133,6 +135,7 @@ jobs:
 
     - name: Flet Build Windows
       run: |
+        $env:PATH = "$env:FLUTTER_ROOT\bin;$env:PATH"
         flutter config --no-analytics
         flet build windows --verbose --no-rich-output --build-number=$env:BUILD_NUMBER --build-version=$env:BUILD_VERSION
 
@@ -169,13 +172,15 @@ jobs:
 
     - name: Accept Android licenses
       run: |
-        yes | flutter doctor --android-licenses || true
+        export PATH="$FLUTTER_ROOT/bin:$PATH"
         flutter precache --android
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        yes | flutter doctor --android-licenses || true
+        yes | sdkmanager --licenses || true
         flutter doctor  # Verify
 
     - name: Flet Build AAB
       run: |
+        export PATH="$FLUTTER_ROOT/bin:$PATH"
         flutter config --no-analytics
         flet build aab --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
 
@@ -224,15 +229,18 @@ jobs:
 
     - name: Accept Android licenses
       run: |
-        export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+        export PATH="$FLUTTER_ROOT/bin:$PATH"
+        export ANDROID_SDK_ROOT="$HOME/android-sdk"
         flutter precache --android
         yes | flutter doctor --android-licenses || true
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        yes | sdkmanager --licenses || true
         flutter doctor  # Verify all ✓
 
     - name: Flet Build APK
       env:
+        PATH: "$FLUTTER_ROOT/bin:$PATH"
         PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
+        ANDROID_SDK_ROOT: "$HOME/android-sdk"
       run: |
         flutter config --no-analytics
         flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
@@ -276,6 +284,7 @@ jobs:
 
     - name: Flet Build IPA
       run: |
+        export PATH="$FLUTTER_ROOT/bin:$PATH"
         flutter config --no-analytics
         flet build ipa --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION 
 
