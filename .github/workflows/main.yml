@@ -1,29 +1,47 @@
-name: Build Flet APK
+name: Build Flet Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Python
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
         
-    - name: Build APK with Flet
+    - name: Install Flet
       run: |
         pip install flet
-        python -m flet build apk main.py
-      
-    - name: Upload APK
+        
+    - name: Create Flet config file
+      run: |
+        cat > flet.json << EOF
+        {
+          "name": "MyFletApp",
+          "description": "My Flet Application",
+          "version": "1.0.0",
+          "android": {
+            "package": "com.example.myfletapp",
+            "min_sdk": 21
+          }
+        }
+        EOF
+        
+    - name: Build APK
+      run: |
+        flet build apk
+        
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-apk
+        name: flet-android-apk
         path: build/apk/*.apk
