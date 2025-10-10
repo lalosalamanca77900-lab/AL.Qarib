@@ -45,7 +45,7 @@ jobs:
       run: |
         flutter precache --android
         yes | flutter doctor --android-licenses || true
-        yes | sdkmanager --licenses || true
+        yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || true
         flutter doctor  # Verify all ✓
         
     - name: Create Flet config file
