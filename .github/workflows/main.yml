@@ -22,6 +22,25 @@ jobs:
       run: |
         pip install flet
         
+    - name: Setup Flutter 3.35.1 (latest stable)
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.1'
+        channel: 'stable'
+        
+    - name: Setup Java JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Accept Android licenses
+      run: |
+        flutter precache --android
+        yes | flutter doctor --android-licenses || true
+        yes | sdkmanager --licenses || true
+        flutter doctor  # Verify all ✓
+        
     - name: Create Flet config file
       run: |
         cat > flet.json << EOF
@@ -31,17 +50,20 @@ jobs:
           "version": "1.0.0",
           "android": {
             "package": "com.example.myfletapp",
-            "min_sdk": 21
+            "min_sdk": 21,
+            "target_sdk": 34
           }
         }
         EOF
         
     - name: Build APK
       run: |
-        flet build apk
+        flutter config --no-analytics
+        flet build apk --verbose
         
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: flet-android-apk
         path: build/apk/*.apk
+        if-no-files-found: error
